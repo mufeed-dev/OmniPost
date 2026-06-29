@@ -7,10 +7,13 @@ import AIComposer from "./pages/AIComposer";
 import Scheduler from "./pages/Scheduler";
 
 import Layout from "./components/Layout";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
     <>
+      <Toaster position="top-right" />
+
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />

@@ -47,7 +47,7 @@ export const generateAuthUrl = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { platfrom } = req.params;
+    const { platform } = req.params;
     const profileId = await getOrCreateZernioProfile(req.user);
 
     const origin = req.headers.origin;
@@ -55,7 +55,7 @@ export const generateAuthUrl = async (
 
     const result = await zernio.connect.getConnectUrl({
       path: {
-        platfrom: platfrom as any,
+        platform: platform as any,
       },
       query: {
         profileId,
@@ -67,7 +67,7 @@ export const generateAuthUrl = async (
 
     console.log("getConnectUrl response", JSON.stringify(data, null, 2));
 
-    const authUrl = data.generateAuthUrl;
+    const authUrl = data.authUrl;
 
     if (!authUrl) {
       throw new Error(

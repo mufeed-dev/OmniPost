@@ -10,6 +10,8 @@ import {
   Wand2Icon,
   XIcon,
 } from "lucide-react";
+import api from "../api/axios";
+import toast from "react-hot-toast";
 
 const AIComposer = () => {
   const [prompt, setPrompt] = useState("");
@@ -25,7 +27,12 @@ const AIComposer = () => {
   const [scheduling, setScheduling] = useState(false);
 
   const fetchGenerations = async () => {
-    setGenerations(dummyGenerationData);
+    try {
+      const { data } = await api.get("/posts/generations");
+      setGenerations(data);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message);
+    }
   };
 
   useEffect(() => {
@@ -33,17 +40,65 @@ const AIComposer = () => {
   }, []);
 
   const handleGenerate = async () => {
+    if (!prompt) {
+      toast.error("Please enter a prompt");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
+
+    try {
+      const { data } = await api.post("/posts/generate", {
+        prompt,
+        generateImage,
+        tone,
+      });
+      setGenerations([data, ...generations]);
+      setActiveScheduler(data);
+      toast.success("Post generated successfully");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message);
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
 
-  const handleSchedule = () => {
+  const handleSchedule = async () => {
+    if (!activeScheduler) return;
+    if (selectedPlatforms.length === 0) {
+      toast.error("select at least one platform");
+      return;
+    }
+    if (!scheduleDate || !scheduleTime) {
+      toast.error("Select Date and Time");
+      return;
+    }
+    const scheduledFor = new Date(
+      `${scheduleDate}T${scheduleTime}`,
+    ).toISOString();
+
     setScheduling(true);
-    setTimeout(() => {
+
+    try {
+      await api.post("/posts", {
+        content: activeScheduler.content,
+        mediaUrl: activeScheduler.mediaUrl,
+        mediaType: activeScheduler.mediaType,
+        platforms: selectedPlatforms,
+        scheduledFor,
+        status: "scheduled",
+      });
+
+      toast.success("Post scheduled successfully");
+      setActiveScheduler(null);
+      setSelectedPlatforms([]);
+      setScheduleDate("");
+      setScheduleTime("");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message);
+    } finally {
       setScheduling(false);
-    }, 2000);
+    }
   };
 
   const tones = ["Professional", "Creative", "Funny", "Minimalist", "Excited"];
